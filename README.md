@@ -1,11 +1,38 @@
 # Ai1300TS 电源与显卡监控
 
+[![build](https://github.com/ZBuer507/ai1300ts-monitor/actions/workflows/build.yml/badge.svg)](https://github.com/ZBuer507/ai1300ts-monitor/actions/workflows/build.yml)
+[![release](https://img.shields.io/github/v/release/ZBuer507/ai1300ts-monitor?display_name=tag&sort=semver)](https://github.com/ZBuer507/ai1300ts-monitor/releases/latest)
+[![license](https://img.shields.io/github/license/ZBuer507/ai1300ts-monitor)](LICENSE)
+[![platform](https://img.shields.io/badge/platform-Windows%20x64-0078D6)](#)
+[![.NET Framework](https://img.shields.io/badge/.NET%20Framework-4.8-512BD4)](#)
+
 两个独立运行的 Windows 托盘程序（.NET Framework 4.8 / WinForms）：直接通过 USB HID 读取
 MSI MPG Ai1300TS（PCIE5）电源的实时数据；GPU 版另外通过 NVAPI I2C 读取 ASUS ROG Astral
 RTX 5090 板载重力传感器，给出俯仰/横滚角与相对基准的偏移。
 
 电源协议来自对 MSI「UC_Power Supply Unit」WPF 插件的 IL 逆向，整理后的协议要点见下文；
 原始 IL 导出属于第三方程序内容，不随仓库发布。
+
+## 界面
+
+托盘悬停卡（自绘，按系统 DPI 缩放）：
+
+<img src="docs/gpu-tray-card.png" width="380" alt="托盘悬停卡">
+
+主窗口（4K / 250% 缩放）：
+
+<img src="docs/gpu-monitor-window.png" width="760" alt="主窗口">
+
+## 下载
+
+最新版本见 [Releases](https://github.com/ZBuer507/ai1300ts-monitor/releases/latest)：
+
+| 产物 | 版本 | 说明 |
+| --- | --- | --- |
+| `Ai1300TS-PsuMonitor.exe` | 1.1.2.0 | 仅电源监控，托盘提示为文本卡片 |
+| `Ai1300TS-GpuMonitor.exe` | 1.1.2.0 | 电源 + 显卡姿态，托盘悬停为自绘悬浮卡 |
+
+两个 exe 放到同一目录即可运行，互不依赖；构建产物不入库。
 
 ## 仓库结构
 
@@ -23,23 +50,10 @@ src/                   产品源码（两个 exe 共用一套源码）
   assets/               图标与应用程序清单
 tests/                  自检与冒烟测试（与产品源码一起编译）
 tools/                  辅助工具（图标生成、显卡姿态探针）
-docs/                   截图与发布说明
+docs/                   截图、发版说明
+.github/workflows/      CI（构建检查）与发版（tag → Release）
 artifacts/              构建输出（不入库）
 work/                   本地逆向资料与旧构建（不入库）
-```
-
-## 产物
-
-| 产物 | 版本 | 说明 |
-| --- | --- | --- |
-| `artifacts/products/Ai1300TS-PsuMonitor.exe` | 1.1.2.0 | 仅电源监控，托盘提示为文本卡片 |
-| `artifacts/products/Ai1300TS-GpuMonitor.exe` | 1.1.0.0 | 电源 + 显卡姿态，托盘悬停为自绘悬浮卡 |
-
-构建产物不入库；部署位置由 `-DeployRoot` 指定（例如 `E:\file`），登录启动项由程序自身写入：
-
-```
-HKCU\Software\Microsoft\Windows\CurrentVersion\Run
-Ai1300TS-GpuMonitor = "<部署目录>\Ai1300TS-GpuMonitor.exe" --background
 ```
 
 ## 架构
@@ -88,10 +102,12 @@ Ai1300TS-GpuMonitor = "<部署目录>\Ai1300TS-GpuMonitor.exe" --background
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\build.ps1                     # 只构建
-powershell -ExecutionPolicy Bypass -File .\build.ps1 -Test               # 构建 + 测试
+powershell -ExecutionPolicy Bypass -File .\build.ps1 -Test               # 构建 + 全部测试
+powershell -ExecutionPolicy Bypass -File .\build.ps1 -Test -NoHardware   # 仅逻辑测试（CI 用）
 powershell -ExecutionPolicy Bypass -File .\build.ps1 -Deploy -DeployRoot "E:\file"   # 构建 + 部署
 ```
 
+`-NoHardware` 会跳过需要本机电源/显卡的两个 GUI 冒烟测试；GitHub Actions 使用它做构建检查。
 `-Deploy` 会停止部署目录下正在运行的实例、覆盖 exe、以 `--background` 隐藏启动，
 并校验进程存活且没有主窗口。`-DeployRoot` 在 `-Deploy` 时必填。
 
@@ -99,16 +115,16 @@ powershell -ExecutionPolicy Bypass -File .\build.ps1 -Deploy -DeployRoot "E:\fil
 
 ## 测试
 
-| 测试 | 覆盖 | 结果 |
+| 测试 | 覆盖 | 是否需要硬件 |
 | --- | --- | --- |
-| `PsuTelemetrySmoke` | 0xE0/0xC1 解码、指数/尾数、忙与全 FF 回包 | 通过（纯逻辑） |
-| `GpuLevelSenseSmoke` | NVAPI x64 结构布局、角度/偏移解码、竖装与倒装 | 通过（纯逻辑） |
-| `PsuCancellationAudit` | 100 次取消挂起后单请求释放（反射） | 通过（无硬件） |
-| `PsuDesktopSmoke` | 真实 HID、隐藏窗口、模拟悬停、托盘文本、截图 | 通过（需本机硬件） |
-| `GpuMonitorTraySmoke` | 真实悬停路径、悬浮卡按系统缩放渲染（1080×1060 @2.5x） | 通过（需本机硬件） |
+| `PsuTelemetrySmoke` | 0xE0/0xC1 解码、指数/尾数、忙与全 FF 回包 | 否 |
+| `GpuLevelSenseSmoke` | NVAPI x64 结构布局、角度/偏移解码、竖装与倒装 | 否 |
+| `PsuCancellationAudit` | 100 次取消挂起后单请求释放（反射） | 否 |
+| `PsuDesktopSmoke` | 真实 HID、隐藏窗口、模拟悬停、托盘文本、截图 | 是 |
+| `GpuMonitorTraySmoke` | 真实悬停路径、悬浮卡按系统缩放渲染（1080×1060 @2.5x） | 是 |
 
-测试程序输出到 `artifacts/tests/`，报告与截图也在该目录。两个 GUI 冒烟测试使用与产品相同的
-DPI 清单编译，按真实系统缩放验证。PSU 的登录启动项归 GPU 版所有，因此 PSU 冒烟测试只在
+测试程序与报告输出到 `artifacts/tests/`。两个 GUI 冒烟测试使用与产品相同的 DPI 清单编译，
+按真实系统缩放验证。PSU 的登录启动项归 GPU 版所有，因此 PSU 冒烟测试只在
 “登记存在时必须指向 PSU 版 exe”时校验注册。
 
 ## 工具
@@ -130,6 +146,18 @@ GpuLevelProbe.exe
 - 回滚：覆盖回旧版 exe 后重启进程；`work/` 内保留了历史构建备份。
 - 部署后可用 `Get-Process Ai1300TS-GpuMonitor` 与注册表 Run 项确认状态。
 
+## 发版
+
+打 tag 后由 `.github/workflows/release.yml` 自动构建并创建 Release（附件为 zip 和两个 exe，
+说明取自 `docs/releases/<tag>.md`）：
+
+```powershell
+git tag -a v1.1.2 -m "Ai1300TS Monitor v1.1.2"
+git push origin v1.1.2
+```
+
+首次配置远程仓库与认证的步骤见 [docs/publish.md](docs/publish.md)。
+
 ## 已知限制与风险
 
 1. 托盘悬停位置依赖反射 `NotifyIcon` 私有字段 `id`/`window` 调用 `Shell_NotifyIconGetRect`，
@@ -140,7 +168,6 @@ GpuLevelProbe.exe
 4. 电源协议与显卡传感器均依赖特定型号（MPG Ai1300TS、ROG Astral RTX 5090），换硬件需重新适配。
 5. exe 未签名，首次运行或被移动后可能触发 SmartScreen。
 
-## 发布到 Git
+## 许可证
 
-仓库已在本机初始化为 `main` 分支并完成首个提交，远程仓库与认证由使用者完成，
-步骤见 [docs/publish.md](docs/publish.md)。
+[MIT](LICENSE) © 2026 zheng.jiatao

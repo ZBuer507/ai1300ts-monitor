@@ -1,0 +1,27 @@
+name: build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build and run logic tests
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File build.ps1 -Test -NoHardware
+
+      - name: Upload products
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ai1300TS-Monitor
+          path: artifacts/products/*.exe
+          if-no-files-found: error

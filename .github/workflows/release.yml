@@ -1,0 +1,39 @@
+name: release
+
+on:
+  push:
+    tags: [ 'v*' ]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build and run logic tests
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File build.ps1 -Test -NoHardware
+
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force artifacts/release | Out-Null
+          $zip = "artifacts/release/Ai1300TS-Monitor-$env:GITHUB_REF_NAME.zip"
+          Compress-Archive -Path artifacts/products/Ai1300TS-PsuMonitor.exe, artifacts/products/Ai1300TS-GpuMonitor.exe -DestinationPath $zip -Force
+
+      - name: Publish release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = $env:GITHUB_REF_NAME
+          $zip = "artifacts/release/Ai1300TS-Monitor-$tag.zip"
+          $notes = "docs/releases/$tag.md"
+          if (Test-Path $notes) {
+            gh release create $tag $zip artifacts/products/Ai1300TS-PsuMonitor.exe artifacts/products/Ai1300TS-GpuMonitor.exe --title "Ai1300TS Monitor $tag" --notes-file $notes
+          } else {
+            gh release create $tag $zip artifacts/products/Ai1300TS-PsuMonitor.exe artifacts/products/Ai1300TS-GpuMonitor.exe --title "Ai1300TS Monitor $tag" --generate-notes
+          }

@@ -2,7 +2,8 @@
 param(
     [switch]$Test,
     [switch]$Deploy,
-    [string]$DeployRoot
+    [string]$DeployRoot,
+    [switch]$NoHardware
 )
 
 $ErrorActionPreference = 'Stop'
@@ -90,28 +91,33 @@ if ($Test) {
         if ($LASTEXITCODE -ne 0) { $failures += "$console exit code $LASTEXITCODE" }
     }
 
-    $smokes = @(
-        @{ Exe = 'PsuDesktopSmoke.exe'; Report = 'psu-desktop-smoke.txt' },
-        @{ Exe = 'GpuMonitorTraySmoke.exe'; Report = 'gpu-monitor-tray-smoke.txt' }
-    )
-    foreach ($smoke in $smokes) {
-        $exe = Join-Path $testsOut $smoke.Exe
-        $report = Join-Path $testsOut $smoke.Report
-        Remove-Item -LiteralPath $report -ErrorAction SilentlyContinue
-        Write-Host "  " + $smoke.Exe
-        $process = Start-Process -FilePath $exe -PassThru
-        if (-not $process.WaitForExit(60000)) {
-            $process.Kill()
-            $failures += $smoke.Exe + " did not exit within 60 s"
-            continue
+    if ($NoHardware) {
+        Write-Host '  skip GUI smokes (-NoHardware: needs local PSU/GPU and a desktop)'
+    }
+    else {
+        $smokes = @(
+            @{ Exe = 'PsuDesktopSmoke.exe'; Report = 'psu-desktop-smoke.txt' },
+            @{ Exe = 'GpuMonitorTraySmoke.exe'; Report = 'gpu-monitor-tray-smoke.txt' }
+        )
+        foreach ($smoke in $smokes) {
+            $exe = Join-Path $testsOut $smoke.Exe
+            $report = Join-Path $testsOut $smoke.Report
+            Remove-Item -LiteralPath $report -ErrorAction SilentlyContinue
+            Write-Host "  " + $smoke.Exe
+            $process = Start-Process -FilePath $exe -PassThru
+            if (-not $process.WaitForExit(60000)) {
+                $process.Kill()
+                $failures += $smoke.Exe + " did not exit within 60 s"
+                continue
+            }
+            if (-not (Test-Path -LiteralPath $report)) {
+                $failures += $smoke.Exe + " did not write " + $smoke.Report
+                continue
+            }
+            $first = Get-Content -LiteralPath $report -TotalCount 1
+            Write-Host "    $first"
+            if ($first -notlike 'PASS*') { $failures += $smoke.Exe + ": " + $first }
         }
-        if (-not (Test-Path -LiteralPath $report)) {
-            $failures += $smoke.Exe + " did not write " + $smoke.Report
-            continue
-        }
-        $first = Get-Content -LiteralPath $report -TotalCount 1
-        Write-Host "    $first"
-        if ($first -notlike 'PASS*') { $failures += $smoke.Exe + ": " + $first }
     }
 }
 
