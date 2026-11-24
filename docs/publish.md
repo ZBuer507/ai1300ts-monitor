@@ -15,7 +15,8 @@ git log --oneline -1
 
 ## 1. 确认提交身份（可选）
 
-首个提交使用占位身份 `MSI PSU Monitor <monitor@localhost>`。改成自己的名字：
+首个提交已使用本机 Git 身份 `zheng.jiatao`（邮箱见 `git log`），并且只对本仓库生效。
+要改成别的身份，或设为全局默认：
 
 ```powershell
 git config user.name "你的名字"
@@ -23,7 +24,7 @@ git config user.email "you@example.com"
 git commit --amend --reset-author --no-edit
 ```
 
-需要全局生效就把 `git config` 换成 `git config --global`。
+去掉 `--amend` 三行中的后两行，只改配置即可影响后续提交。
 
 ## 2. 创建远程仓库
 
@@ -44,8 +45,9 @@ git@gitee.com:<账号>/<仓库>.git
 
 ### 方案 A：SSH 密钥（推荐）
 
+本机已经生成好 ed25519 密钥（`~\.ssh\id_ed25519`，无口令），只需要注册公钥：
+
 ```powershell
-ssh-keygen -t ed25519 -C "you@example.com"
 Get-Content $env:USERPROFILE\.ssh\id_ed25519.pub | Set-Clipboard
 ```
 
@@ -53,6 +55,8 @@ Get-Content $env:USERPROFILE\.ssh\id_ed25519.pub | Set-Clipboard
 
 - GitHub：Settings → SSH and GPG keys → New SSH key
 - Gitee：设置 → SSH 公钥
+
+如果想给私钥加口令：`ssh-keygen -p -f $env:USERPROFILE\.ssh\id_ed25519`。
 
 验证连通：
 
