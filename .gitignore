@@ -1,0 +1,19 @@
+# 构建输出（由 build.ps1 生成）
+artifacts/
+outputs/
+
+# 本地逆向资料、审计日志与历史构建
+work/
+
+# 二进制与调试文件
+*.exe
+*.dll
+*.pdb
+*.log
+
+# Visual Studio / 临时文件
+.vs/
+bin/
+obj/
+*.user
+*.tmp
