@@ -36,7 +36,7 @@ internal sealed partial class MonitorWindow
         panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 27));
         panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 28));
         panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 18));
-        AddSectionTitle(panel, "显卡姿态  ·  ROG Astral RTX 5090", 4);
+        AddSectionTitle(panel, "显卡姿态  ·  " + GpuLevelSense.ProductModel, 4);
         panel.RowStyles.Add(new RowStyle(SizeType.Absolute, Pixels(18)));
         panel.RowStyles.Add(new RowStyle(SizeType.Absolute, Pixels(25)));
         panel.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
@@ -196,7 +196,7 @@ internal sealed partial class MonitorWindow
                     !Int16.TryParse(values[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out z) ||
                     (x == 0 && y == 0 && z == 0) || (x == -1 && y == -1 && z == -1))
                     return null;
-                return new GpuLevelReading(x, y, z, "ROG Astral RTX 5090");
+                return new GpuLevelReading(x, y, z, GpuLevelSense.ProductModel);
             }
         }
         catch (Exception error)

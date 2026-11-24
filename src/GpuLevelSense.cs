@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -42,6 +42,8 @@ internal sealed class GpuLevelReading
 
 internal sealed class GpuLevelSense : IDisposable
 {
+    internal const string ProductModel = "ROG Astral RTX 5090 P32G Edition 20";
+
     private const uint ExpectedPciId = 0x2B8510DE;
     private const uint ExpectedSubsystemId = 0x8A8C1043;
     private const int MaxPhysicalGpus = 64;
@@ -195,14 +197,14 @@ internal sealed class GpuLevelSense : IDisposable
         }
 
         if (match == IntPtr.Zero)
-            throw new InvalidOperationException("未检测到本机支持的 ASUS RTX 5090 显卡（SUBSYS 8A8C1043）。");
+            throw new InvalidOperationException("未检测到本机支持的 " + ProductModel + "（SUBSYS 8A8C1043）。");
         if (ReadRegisters(match, ChipIdRegister, 1, registers)[0] != ChipId)
             throw new InvalidOperationException("显卡板载控制器的标识与预期不符。");
 
         var name = new StringBuilder(64);
         model = getName(match, name) == NvSuccess && name.Length != 0
             ? name.ToString()
-            : "ASUS RTX 5090";
+            : ProductModel;
         adapter = match;
     }
 

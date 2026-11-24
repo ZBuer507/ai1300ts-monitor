@@ -15,11 +15,11 @@ using Timer = System.Windows.Forms.Timer;
 [assembly: AssemblyTitle(MonitorProduct.AssemblyTitle)]
 [assembly: AssemblyDescription(MonitorProduct.Description)]
 #if GPU_LEVEL
-[assembly: AssemblyVersion("1.1.2.0")]
-[assembly: AssemblyFileVersion("1.1.2.0")]
+[assembly: AssemblyVersion("1.1.3.0")]
+[assembly: AssemblyFileVersion("1.1.3.0")]
 #else
-[assembly: AssemblyVersion("1.1.2.0")]
-[assembly: AssemblyFileVersion("1.1.2.0")]
+[assembly: AssemblyVersion("1.1.3.0")]
+[assembly: AssemblyFileVersion("1.1.3.0")]
 #endif
 
 internal static class MonitorProduct
@@ -28,7 +28,7 @@ internal static class MonitorProduct
     internal const string Key = "Ai1300TS-GpuMonitor";
     internal const string Title = "电源与显卡监控";
     internal const string AssemblyTitle = "PSU and GPU Level Monitor";
-    internal const string Description = "Ai1300TS power supply and ROG Astral RTX 5090 angle monitoring";
+    internal const string Description = "Ai1300TS power supply and " + GpuLevelSense.ProductModel + " angle monitoring";
 #else
     internal const string Key = "Ai1300TS-PsuMonitor";
     internal const string Title = "Ai1300TS 电源监控";

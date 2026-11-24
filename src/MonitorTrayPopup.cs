@@ -165,7 +165,7 @@ internal sealed class MonitorTrayPopup : Form
         using (var brush = new SolidBrush(Mint))
             g.FillPolygon(brush, Bolt);
         DrawText(g, "电源与显卡监控", titleFont, Foreground, new RectangleF(55, 12, 254, 25), left);
-        DrawText(g, "Ai1300TS PCIE5  ·  Astral RTX 5090", labelFont, Muted, new RectangleF(55, 35, 258, 14), left);
+        DrawText(g, "Ai1300TS PCIE5  ·  Astral RTX 5090 P32G Edition 20", labelFont, Muted, new RectangleF(55, 35, 258, 14), left);
 
         bool fullyConnected = snapshot.Supply != null && snapshot.Gpu != null;
         bool partlyConnected = snapshot.Supply != null || snapshot.Gpu != null;

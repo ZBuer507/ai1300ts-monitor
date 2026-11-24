@@ -7,8 +7,9 @@
 [![.NET Framework](https://img.shields.io/badge/.NET%20Framework-4.8-512BD4)](#)
 
 两个独立运行的 Windows 托盘程序（.NET Framework 4.8 / WinForms）：直接通过 USB HID 读取
-MSI MPG Ai1300TS（PCIE5）电源的实时数据；GPU 版另外通过 NVAPI I2C 读取 ASUS ROG Astral
-RTX 5090 板载重力传感器，给出俯仰/横滚角与相对基准的偏移。
+MSI MPG Ai1300TS（PCIE5）电源的实时数据；GPU 版另外通过 NVAPI I2C 读取
+ASUS ROG Astral GeForce RTX 5090 Edition 20（32GB，型号
+`ROG-ASTRAL-RTX5090-P32G-EDITION20`）板载重力传感器，给出俯仰/横滚角与相对基准的偏移。
 
 电源协议来自对 MSI「UC_Power Supply Unit」WPF 插件的 IL 逆向，整理后的协议要点见下文；
 原始 IL 导出属于第三方程序内容，不随仓库发布。
@@ -29,8 +30,8 @@ RTX 5090 板载重力传感器，给出俯仰/横滚角与相对基准的偏移�
 
 | 产物 | 版本 | 说明 |
 | --- | --- | --- |
-| `Ai1300TS-PsuMonitor.exe` | 1.1.2.0 | 仅电源监控，托盘提示为文本卡片 |
-| `Ai1300TS-GpuMonitor.exe` | 1.1.2.0 | 电源 + 显卡姿态，托盘悬停为自绘悬浮卡 |
+| `Ai1300TS-PsuMonitor.exe` | 1.1.3.0 | 仅电源监控，托盘提示为文本卡片 |
+| `Ai1300TS-GpuMonitor.exe` | 1.1.3.0 | 电源 + 显卡姿态，托盘悬停为自绘悬浮卡 |
 
 两个 exe 放到同一目录即可运行，互不依赖；构建产物不入库。
 
@@ -79,7 +80,8 @@ work/                   本地逆向资料与旧构建（不入库）
 
 - `nvapi64.dll!nvapi_QueryInterface` 动态绑定 `NvAPI_Initialize/Unload`、
   `EnumPhysicalGPUs`、`GetPCIIdentifiers`、`GetFullName`、`I2CReadEx`。
-- 目标卡：`DEV 2B85 / VEN 10DE`，`SUBSYS 1043:8A8C`；同型号多卡直接报错，避免读错传感器。
+- 目标卡：ASUS ROG Astral GeForce RTX 5090 Edition 20（`ROG-ASTRAL-RTX5090-P32G-EDITION20`），
+  `DEV 2B85 / VEN 10DE`，`SUBSYS 1043:8A8C`；同型号多卡直接报错，避免读错传感器。
 - I2C 地址 `0x2B << 1`、Port 1；芯片 ID 寄存器 `0x21 = 0x89`；重力向量从 `0x70` 起 6 字节，
   大端有符号 16 位。
 - `Pitch = atan2(X, -Z)`，`Roll = atan2(Y, -Z)`；与基准比较用两向量夹角，竖装/倒装均可用。
@@ -165,7 +167,8 @@ git push origin v1.1.2
 2. 清单声明的是 System DPI 感知，不是 per-monitor v2；多显示器不同缩放时悬浮卡定位可能偏移。
 3. 外部工具用 `WM_CLOSE` 关闭窗口会被 WinForms 判为 `TaskManagerClosing`，进程直接退出；
    用户点 X（`SC_CLOSE`）是隐藏。属通用行为，未做特殊处理。
-4. 电源协议与显卡传感器均依赖特定型号（MPG Ai1300TS、ROG Astral RTX 5090），换硬件需重新适配。
+4. 电源协议与显卡传感器均依赖特定型号（MPG Ai1300TS、ROG Astral RTX 5090 P32G Edition 20），
+   换硬件需重新适配。
 5. exe 未签名，首次运行或被移动后可能触发 SmartScreen。
 
 ## 许可证
