@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 using Microsoft.Win32.SafeHandles;
 
 public sealed class PsuHidTransport : IDisposable
@@ -83,6 +84,52 @@ public sealed class PsuHidTransport : IDisposable
                     throw Win32Failure("释放电源访问锁失败", error);
                 }
             }
+        }
+    }
+
+    public static string ReadProductName()
+    {
+        return ReadDeviceString(true);
+    }
+
+    public static string ReadManufacturerName()
+    {
+        return ReadDeviceString(false);
+    }
+
+    public static string ReadModelName()
+    {
+        string product = ReadProductName();
+        if (product == null)
+            return null;
+        string manufacturer = ReadManufacturerName();
+        return String.IsNullOrEmpty(manufacturer) ? product : manufacturer + " " + product;
+    }
+
+    private static string ReadDeviceString(bool product)
+    {
+        try
+        {
+            using (SafeFileHandle handle = OpenDevice(FindDevice(), 0, 0))
+            {
+                var buffer = new StringBuilder(256);
+                bool read = product
+                    ? Native.HidD_GetProductString(handle, buffer, (uint)(buffer.Capacity * 2))
+                    : Native.HidD_GetManufacturerString(handle, buffer, (uint)(buffer.Capacity * 2));
+                if (!read)
+                    return null;
+
+                string value = buffer.ToString().Trim();
+                return value.Length == 0 ? null : value;
+            }
+        }
+        catch (Exception error)
+        {
+            if (!(error is IOException || error is Win32Exception ||
+                  error is UnauthorizedAccessException || error is InvalidOperationException ||
+                  error is ArgumentException))
+                throw;
+            return null;
         }
     }
 
@@ -497,6 +544,14 @@ public sealed class PsuHidTransport : IDisposable
         [DllImport("hid.dll", ExactSpelling = true, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.U1)]
         internal static extern bool HidD_FlushQueue(SafeFileHandle device);
+
+        [DllImport("hid.dll", CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.U1)]
+        internal static extern bool HidD_GetProductString(SafeFileHandle device, StringBuilder buffer, uint bufferLength);
+
+        [DllImport("hid.dll", CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.U1)]
+        internal static extern bool HidD_GetManufacturerString(SafeFileHandle device, StringBuilder buffer, uint bufferLength);
 
         [DllImport("setupapi.dll", CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = true)]
         internal static extern IntPtr SetupDiGetClassDevsW(ref Guid hid, string enumerator, IntPtr hwnd, uint flags);

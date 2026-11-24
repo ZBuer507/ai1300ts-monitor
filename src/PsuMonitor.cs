@@ -15,11 +15,11 @@ using Timer = System.Windows.Forms.Timer;
 [assembly: AssemblyTitle(MonitorProduct.AssemblyTitle)]
 [assembly: AssemblyDescription(MonitorProduct.Description)]
 #if GPU_LEVEL
-[assembly: AssemblyVersion("1.1.3.0")]
-[assembly: AssemblyFileVersion("1.1.3.0")]
+[assembly: AssemblyVersion("1.1.4.0")]
+[assembly: AssemblyFileVersion("1.1.4.0")]
 #else
-[assembly: AssemblyVersion("1.1.3.0")]
-[assembly: AssemblyFileVersion("1.1.3.0")]
+[assembly: AssemblyVersion("1.1.4.0")]
+[assembly: AssemblyFileVersion("1.1.4.0")]
 #endif
 
 internal static class MonitorProduct
@@ -134,6 +134,7 @@ internal sealed partial class MonitorWindow : Form
     private readonly Font readingFont = new Font("Segoe UI", 11F, FontStyle.Bold);
     private readonly float scale = GetDpiForSystem() / 96F;
     private readonly Timer timer = new Timer();
+    private readonly Label productTitle;
     private readonly Label connection;
     private readonly Label timestamp;
     private readonly Label detail;
@@ -156,6 +157,7 @@ internal sealed partial class MonitorWindow : Form
     private string psuTraySummary = "正在连接电源…";
 #endif
     private PsuHidTransport transport;
+    private string psuModelName;
     private bool polling;
     private bool closing;
     private bool exitRequested;
@@ -202,7 +204,8 @@ internal sealed partial class MonitorWindow : Form
         header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35));
         header.RowStyles.Add(new RowStyle(SizeType.Absolute, Pixels(45)));
         header.RowStyles.Add(new RowStyle(SizeType.Absolute, Pixels(25)));
-        header.Controls.Add(LabelFor("MPG Ai1300TS PCIE5", titleFont, Foreground), 0, 0);
+        productTitle = LabelFor("电源", titleFont, Foreground);
+        header.Controls.Add(productTitle, 0, 0);
         header.Controls.Add(LabelFor("USB HID  ·  电源实时监控", uiFont, Secondary), 0, 1);
         connection = LabelFor("正在连接", sectionFont, Warning, ContentAlignment.MiddleRight);
         timestamp = LabelFor("等待首个样本", smallFont, Secondary, ContentAlignment.MiddleRight);
@@ -335,6 +338,7 @@ internal sealed partial class MonitorWindow : Form
         };
         timer.Tick += async (sender, args) => await PollAsync();
         RefreshStartup();
+        productTitle.Text = PsuModelName;
     }
 
     public void StartPolling()
@@ -392,6 +396,16 @@ internal sealed partial class MonitorWindow : Form
         trayStartup.Text = startup.Text;
     }
 
+    private string PsuModelName
+    {
+        get
+        {
+            if (psuModelName == null)
+                psuModelName = PsuHidTransport.ReadModelName();
+            return psuModelName ?? "电源";
+        }
+    }
+
     private void ToggleStartup()
     {
         trayHover.Dismiss();
@@ -446,12 +460,13 @@ internal sealed partial class MonitorWindow : Form
         return section;
     }
 
-    private void AddSectionTitle(TableLayoutPanel section, string title, int span)
+    private Label AddSectionTitle(TableLayoutPanel section, string title, int span)
     {
         var label = LabelFor(title, sectionFont, Foreground);
         section.RowStyles.Add(new RowStyle(SizeType.Absolute, Pixels(28)));
         section.Controls.Add(label, 0, 0);
         section.SetColumnSpan(label, span);
+        return label;
     }
 
     private static Label LabelFor(string text, Font font, Color color,
@@ -628,6 +643,7 @@ internal sealed partial class MonitorWindow : Form
         timestamp.Text = "更新于 " + sampleTime.ToString("HH:mm:ss", CultureInfo.InvariantCulture);
         detail.Text = "关闭窗口后继续在托盘监控";
         elevate.Visible = false;
+        productTitle.Text = PsuModelName;
 #if GPU_LEVEL
         supplyLatest = sample;
         supplyUpdatedAt = sampleTime;
@@ -646,6 +662,7 @@ internal sealed partial class MonitorWindow : Form
             SupplyUpdatedAt = supplyUpdatedAt,
             SupplyState = connection.Text,
             SupplyDetail = supplyLatest == null ? detail.Text : null,
+            SupplyModel = PsuModelName,
             Gpu = gpuLatest,
             GpuDeviation = gpuTrayDeviation,
             GpuAboveThreshold = gpuTrayAboveThreshold,

@@ -30,8 +30,8 @@ ASUS ROG Astral GeForce RTX 5090 Edition 20（32GB，型号
 
 | 产物 | 版本 | 说明 |
 | --- | --- | --- |
-| `Ai1300TS-PsuMonitor.exe` | 1.1.3.0 | 仅电源监控，托盘提示为文本卡片 |
-| `Ai1300TS-GpuMonitor.exe` | 1.1.3.0 | 电源 + 显卡姿态，托盘悬停为自绘悬浮卡 |
+| `Ai1300TS-PsuMonitor.exe` | 1.1.4.0 | 仅电源监控，托盘提示为文本卡片 |
+| `Ai1300TS-GpuMonitor.exe` | 1.1.4.0 | 电源 + 显卡姿态，托盘悬停为自绘悬浮卡 |
 
 两个 exe 放到同一目录即可运行，互不依赖；构建产物不入库。
 
@@ -97,6 +97,14 @@ work/                   本地逆向资料与旧构建（不入库）
 - GPU 版托盘悬停 350 ms 后显示悬浮卡（逻辑尺寸 432×424，按系统 DPI 缩放），
   PSU 版显示文本弹窗。
 
+### 型号显示
+
+- 电源型号在运行时读取 HID 设备字符串（`HidD_GetManufacturerString` + `HidD_GetProductString`，
+  本机为 `MSI` + `MPG Ai1300TS`），窗口标题与托盘副标题随之更新，不在代码里写死。
+- 显卡型号来自 `NvAPI_GPU_GetFullName`（本机为 `NVIDIA GeForce RTX 5090`），
+  首次读取成功后更新“显卡姿态”标题与悬浮卡副标题。
+- 任一路读取失败时退回通用文案（“电源”/“显卡”），不影响监控本身。
+
 ## 构建
 
 需要 .NET Framework 4.8 的 `csc.exe`（`C:\Windows\Microsoft.NET\Framework64\v4.0.30319`），
@@ -154,8 +162,8 @@ GpuLevelProbe.exe
 说明取自 `docs/releases/<tag>.md`）：
 
 ```powershell
-git tag -a v1.1.2 -m "Ai1300TS Monitor v1.1.2"
-git push origin v1.1.2
+git tag -a v1.1.4 -m "Ai1300TS Monitor v1.1.4"
+git push origin v1.1.4
 ```
 
 首次配置远程仓库与认证的步骤见 [docs/publish.md](docs/publish.md)。
@@ -170,6 +178,11 @@ git push origin v1.1.2
 4. 电源协议与显卡传感器均依赖特定型号（MPG Ai1300TS、ROG Astral RTX 5090 P32G Edition 20），
    换硬件需重新适配。
 5. exe 未签名，首次运行或被移动后可能触发 SmartScreen。
+
+## Contributors
+
+- **zheng.jiatao** — 需求、硬件验证与发布
+- **DeepSeek Harness** — 逆向分析、代码实现、测试与文档（AI 编程助手）
 
 ## 许可证
 

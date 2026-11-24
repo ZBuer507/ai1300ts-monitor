@@ -26,6 +26,7 @@ internal sealed partial class MonitorWindow
     private Label gpuRoll;
     private Label gpuDeviation;
     private Label gpuState;
+    private Label gpuTitle;
     private Button gpuCalibrate;
 
     private Control CreateGpuPanel()
@@ -36,7 +37,7 @@ internal sealed partial class MonitorWindow
         panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 27));
         panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 28));
         panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 18));
-        AddSectionTitle(panel, "显卡姿态  ·  " + GpuLevelSense.ProductModel, 4);
+        gpuTitle = AddSectionTitle(panel, "显卡姿态", 4);
         panel.RowStyles.Add(new RowStyle(SizeType.Absolute, Pixels(18)));
         panel.RowStyles.Add(new RowStyle(SizeType.Absolute, Pixels(25)));
         panel.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
@@ -138,6 +139,8 @@ internal sealed partial class MonitorWindow
 
     private void ShowGpuLevel()
     {
+        if (!String.IsNullOrEmpty(gpuLatest.Model))
+            gpuTitle.Text = "显卡姿态  ·  " + gpuLatest.Model;
         gpuPitch.Text = Reading(gpuLatest.PitchDegrees, "+0.00;-0.00;0.00", "°");
         gpuRoll.Text = Reading(gpuLatest.RollDegrees, "+0.00;-0.00;0.00", "°");
         gpuCalibrate.Enabled = true;

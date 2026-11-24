@@ -11,6 +11,7 @@ internal sealed class MonitorTraySnapshot
     public DateTime? SupplyUpdatedAt;
     public string SupplyState;
     public string SupplyDetail;
+    public string SupplyModel;
     public GpuLevelReading Gpu;
     public double? GpuDeviation;
     public bool GpuAboveThreshold;
@@ -165,7 +166,7 @@ internal sealed class MonitorTrayPopup : Form
         using (var brush = new SolidBrush(Mint))
             g.FillPolygon(brush, Bolt);
         DrawText(g, "电源与显卡监控", titleFont, Foreground, new RectangleF(55, 12, 254, 25), left);
-        DrawText(g, "Ai1300TS PCIE5  ·  Astral RTX 5090 P32G Edition 20", labelFont, Muted, new RectangleF(55, 35, 258, 14), left);
+        DrawText(g, ModelSubtitle(snapshot), labelFont, Muted, new RectangleF(55, 35, 258, 14), left);
 
         bool fullyConnected = snapshot.Supply != null && snapshot.Gpu != null;
         bool partlyConnected = snapshot.Supply != null || snapshot.Gpu != null;
@@ -174,6 +175,15 @@ internal sealed class MonitorTrayPopup : Form
         FillCard(g, new RectangleF(330, 20, 87, 23), 11.5F, fullyConnected ? BadgeLive : BadgeWaiting);
         Dot(g, statusColor, 341, 28.5F, 6);
         DrawText(g, status, labelFont, statusColor, new RectangleF(352, 21, 56, 21), left);
+    }
+
+    private static string ModelSubtitle(MonitorTraySnapshot snapshot)
+    {
+        string supply = snapshot.SupplyModel;
+        string gpu = snapshot.Gpu == null ? null : snapshot.Gpu.Model;
+        if (String.IsNullOrEmpty(supply))
+            return String.IsNullOrEmpty(gpu) ? "正在连接电源与显卡…" : gpu;
+        return String.IsNullOrEmpty(gpu) ? supply : supply + "  ·  " + gpu;
     }
 
     private void DrawPower(Graphics g, PsuTelemetry s)
